@@ -33,13 +33,16 @@ pub fn get_eink_image(w: &weather::Data, imei: u64, v: u32) -> Vec<u8>{
     drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(0, 0).of_size(WIDTH, HEIGHT),image::Luma([255]));
     //写字
     drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC, "hello 测试中文");
-    //img.save("done.png").unwrap();
+    drawing::draw_text_mut(&mut img, GRAY2, 0,20, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC, "hello 测试中文");
+    drawing::draw_text_mut(&mut img, GRAY1, 0,40, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC, "hello 测试中文");
+    drawing::draw_text_mut(&mut img, WHITE, 0,60, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC, "hello 测试中文");
+    img.save("done.png").unwrap();
 
-    generate_eink_bytes(img)
+    generate_eink_bytes(&img)
 }
 
 //生成最终的图片序列
-fn generate_eink_bytes(img: GrayImage)->Vec<u8>{
+fn generate_eink_bytes(img: &GrayImage)->Vec<u8>{
     let mut r1:Vec<u8> = Vec::new();//第一张
     let mut r2:Vec<u8> = Vec::new();//第二张
     for y in 0..HEIGHT {
@@ -54,8 +57,8 @@ fn generate_eink_bytes(img: GrayImage)->Vec<u8>{
                     64 ..=127 => (0,1),
                     0  ..=63  => (0,0),
                 };
-                temp1+=t1<<i;
-                temp2+=t2<<i;
+                temp1+=t1<<(7-i);
+                temp2+=t2<<(7-i);
             }
             r1.push(temp1);
             r2.push(temp2);
