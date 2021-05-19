@@ -33,7 +33,7 @@ pub fn get_eink_image(w: &weather::Data, imei: u64, v: u32) -> Vec<u8>{
     drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(0, 0).of_size(WIDTH, HEIGHT),image::Luma([255]));
     //写字
     drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC, "hello 测试中文");
-    img.save("done.png").unwrap();
+    //img.save("done.png").unwrap();
 
     generate_eink_bytes(img)
 }

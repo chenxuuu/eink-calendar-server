@@ -91,7 +91,7 @@ async fn main() {
         .and(warp::body::json())
         .and_then(get_eink_data);
 
-    let hello = warp::get().and(warp::path("hello"))
+    let hello = warp::get().and(warp::path("eink-calendar")).and(warp::path("hello"))
         .map(||"hello world!");
 
     info!("{}", "server start");
