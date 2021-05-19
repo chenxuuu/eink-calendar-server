@@ -91,6 +91,9 @@ async fn main() {
         .and(warp::body::json())
         .and_then(get_eink_data);
 
+    let hello = warp::get().and(warp::path("hello"))
+        .map(||"hello world!");
+
     info!("{}", "server start");
-    warp::serve(eink).run(([127, 0, 0, 1], 10241)).await
+    warp::serve(eink.or(hello)).run(([127, 0, 0, 1], 10241)).await
 }
