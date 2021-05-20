@@ -1,4 +1,4 @@
-use image::{ImageBuffer, GrayImage};
+use image::{ImageBuffer, GrayImage,open};
 use imageproc::drawing;
 use rusttype::{Font,Scale};
 use crate::weather;
@@ -6,7 +6,12 @@ use chrono::prelude::*;
 use lazy_static::*;
 use std::fs::File;
 use std::io::Read;
+use std::convert::TryInto;
 
+//获取资源文件路径
+fn get_path() -> String{
+    std::env::args().nth(1).expect("static/")
+}
 //加载字体文件
 fn load_font(path: String) -> Font<'static>{
     let mut file = File::open(path).unwrap();
@@ -16,9 +21,15 @@ fn load_font(path: String) -> Font<'static>{
 }
 //静态加载字体
 lazy_static! {
-    static ref FONT_STATIC: Font<'static> = load_font(std::env::args().nth(1).expect("sarasa-regular.ttc"));
-    static ref FONT_PIXEL: Font<'static> = load_font(std::env::args().nth(2).expect("LanaPixel.ttf"));
-    static ref FONT_ART: Font<'static> = load_font(std::env::args().nth(3).expect("ShangShouShaoNianTi.ttf"));
+    static ref FONT_STATIC: Font<'static> = load_font(get_path() + "sarasa-regular.ttc");
+    static ref FONT_PIXEL: Font<'static> = load_font(get_path() + "LanaPixel.ttf");
+    static ref FONT_ART: Font<'static> = load_font(get_path() + "ShangShouShaoNianTi.ttf");
+}
+
+//摆放天气图片
+fn put_weather_img(img: &mut GrayImage,n: u32,x: u32, y: u32) {
+    let on_top = open(get_path()+"bw-64/"+&n.to_string()+".png").unwrap().into_luma8();
+    image::imageops::overlay(img, &on_top, x, y);
 }
 
 //屏幕长宽
@@ -26,14 +37,15 @@ const WIDTH:u32 = 400;
 const HEIGHT:u32 = 300;
 
 //四种颜色
-const WHITE:image::Luma<u8> = image::Luma([223]);
+const WHITE:image::Luma<u8> = image::Luma([255]);
 const GRAY1:image::Luma<u8> = image::Luma([159]);
 const GRAY2:image::Luma<u8> = image::Luma([ 96]);
-const BLACK:image::Luma<u8> = image::Luma([ 32]);
+const BLACK:image::Luma<u8> = image::Luma([ 0]);
 
 pub fn get_eink_image(w: &weather::WeatherData, imei: u64, v: u32) -> Vec<u8>{
     // 构建具有指定宽度和高度的RGB图像缓冲区。
     let mut img: GrayImage = ImageBuffer::new(WIDTH, HEIGHT);
+
     //刷白
     drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(0, 0).of_size(WIDTH, HEIGHT),image::Luma([255]));
 
@@ -44,6 +56,23 @@ pub fn get_eink_image(w: &weather::WeatherData, imei: u64, v: u32) -> Vec<u8>{
     drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 40.0,y: 40.0 }, &FONT_ART,&(dt.month().to_string()+"月"));
     drawing::draw_text_mut(&mut img, BLACK, 0,40, Scale {x: 80.0,y: 80.0 }, &FONT_ART, &dt.day().to_string());
 
+
+    if w.code == "200" {
+        for n in 0..6 {
+            let now = w.daily.get(n).unwrap();
+            put_weather_img(&mut img,now.iconDay.to_string().parse::<u32>().unwrap(),66*n as u32,172);
+            put_weather_img(&mut img,now.iconNight.to_string().parse::<u32>().unwrap(),66*n as u32,236);
+            match n {
+                0 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"今天"),
+                1 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"明天"),
+                2 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"后天"),
+                _ => {
+                    let dt_now = dt + chrono::Duration::days(n as i64);
+                    drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&(dt_now.day().to_string()+"日"))
+                }
+            }
+        }
+    }
 
     generate_eink_bytes(&img)
 }

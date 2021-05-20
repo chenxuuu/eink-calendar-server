@@ -12,12 +12,8 @@ Cargo.lock
 #key数据
 *.key
 
-#字体文件（太大了）
-*.ttc
-*.ttf
-
-#生成的图片
-*.png
+#静态资源文件（太大了）
+#static/
 
 #工具
 *.lnk
