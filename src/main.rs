@@ -4,9 +4,10 @@ use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use warp::Filter;
+use tracing_subscriber::fmt::format::FmtSpan;
+use tracing::{debug,info,warn,error};
 mod weather;
 mod eink_image;
-#[macro_use]
 extern crate log;
 
 #[derive(Deserialize, Serialize)]
@@ -31,6 +32,8 @@ async fn get_eink_data(
     lat: f64,
     device: Calendar,
 ) -> Result<impl warp::Reply, Infallible> {
+    info!("new request");
+
     //当前时间（加点时间防止刷新完过了
     let dt = Local::now() + chrono::Duration::seconds(45);
     let now = TimeStruct {
@@ -52,17 +55,15 @@ async fn get_eink_data(
         second: 0,
     };
 
-    let resp = reqwest::get(
-        &format!(
-            "https://free-api.heweather.com/s6/weather/forecast?location={},{}&key={}",
-            lng,
-            lat,
-            String::from_utf8_lossy(include_bytes!("weather.key"))
-        )
-    ).await.unwrap().text().await.unwrap();
+    let client = reqwest::Client::builder().build().unwrap();
+    let resp = client.get(&format!(
+        "https://devapi.qweather.com/v7/weather/7d?location={},{}&key={}",
+        lng,
+        lat,
+        String::from_utf8_lossy(include_bytes!("weather.key"))
+    )).send().await.unwrap().text().await.unwrap();
 
-    let v: weather::WeatherData = serde_json::from_str(&resp).unwrap();
-    let weather_data = v.HeWeather6.get(0).unwrap();
+    let weather_data: weather::WeatherData = serde_json::from_str(&resp).unwrap();
 
     //用来存放最终返回的结果
     let mut reply: Vec<u8> = Vec::new();
@@ -72,14 +73,20 @@ async fn get_eink_data(
     reply.append(&mut bincode::serialize(&next).unwrap());
 
     //最终的图片
-    reply.append(&mut eink_image::get_eink_image(weather_data,imei,device.voltage));
+    reply.append(&mut eink_image::get_eink_image(&weather_data,imei,device.voltage));
 
     Ok(reply)
 }
 
 #[tokio::main]
 async fn main() {
-    pretty_env_logger::init();
+    tracing_subscriber::fmt()
+        // Use the filter we built above to determine which traces to record.
+        //.with_env_filter(filter)
+        // Record an event when each span closes. This can be used to time our
+        // routes' durations!
+        .with_span_events(FmtSpan::CLOSE)
+        .init();
 
     // POST /eink-calendar/:imei/:lat/:lng  {"voltage":4100}
     let eink = warp::post()
@@ -89,11 +96,11 @@ async fn main() {
         .and(warp::path::param::<f64>())
         .and(warp::body::content_length_limit(1024 * 2))
         .and(warp::body::json())
-        .and_then(get_eink_data);
+        .and_then(get_eink_data)
+        .with(warp::trace::named("log"));
 
     let hello = warp::get().and(warp::path("eink-calendar")).and(warp::path("hello"))
         .map(||"hello world!");
 
-    info!("{}", "server start");
     warp::serve(eink.or(hello)).run(([127, 0, 0, 1], 10241)).await
 }

@@ -14,6 +14,10 @@ Cargo.lock
 
 #字体文件（太大了）
 *.ttc
+*.ttf
 
 #生成的图片
 *.png
+
+#工具
+*.lnk
