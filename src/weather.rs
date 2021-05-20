@@ -37,3 +37,10 @@ pub struct Data {
     pub uvIndex: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct Hitokoto {
+//    pub from: String,
+//    pub from_who: String,
+    pub hitokoto: String,
+    pub length: u32,
+}

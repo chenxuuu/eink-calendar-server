@@ -62,11 +62,13 @@ async fn get_eink_data(
         lat,
         String::from_utf8_lossy(include_bytes!("weather.key"))
     )).send().await.unwrap().text().await.unwrap();
-
     //debug用，使用固定的天气信息
     //let resp = String::from_utf8_lossy(include_bytes!("weather_json.json"));
-
     let weather_data: weather::WeatherData = serde_json::from_str(&resp).unwrap();
+
+    //一言
+    let resp = client.get("https://v1.hitokoto.cn/?c=i&min_length=16&max_length=16").send().await.unwrap().text().await.unwrap();
+    let hitokoto: weather::Hitokoto = serde_json::from_str(&resp).unwrap();
 
     //用来存放最终返回的结果
     let mut reply: Vec<u8> = Vec::new();
@@ -76,7 +78,7 @@ async fn get_eink_data(
     reply.append(&mut bincode::serialize(&next).unwrap());
 
     //最终的图片
-    reply.append(&mut eink_image::get_eink_image(&weather_data,imei,device.voltage));
+    reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage));
 
     Ok(reply)
 }

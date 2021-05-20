@@ -42,12 +42,12 @@ const GRAY1:image::Luma<u8> = image::Luma([159]);
 const GRAY2:image::Luma<u8> = image::Luma([ 96]);
 const BLACK:image::Luma<u8> = image::Luma([ 0]);
 
-pub fn get_eink_image(w: &weather::WeatherData, imei: u64, v: u32) -> Vec<u8>{
+pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u64, v: u32) -> Vec<u8>{
     // 构建具有指定宽度和高度的RGB图像缓冲区。
     let mut img: GrayImage = ImageBuffer::new(WIDTH, HEIGHT);
 
     //刷白
-    drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(0, 0).of_size(WIDTH, HEIGHT),image::Luma([255]));
+    drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(0, 0).of_size(WIDTH, HEIGHT),WHITE);
 
     //当前时间（加点时间防止刷新完过了
     let dt = Local::now() + chrono::Duration::seconds(45);
@@ -74,12 +74,25 @@ pub fn get_eink_image(w: &weather::WeatherData, imei: u64, v: u32) -> Vec<u8>{
     drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 170.0,y: 170.0 }, &FONT_ART, &format!("{:02}",dt.day()));
     drawing::draw_text_mut(&mut img, BLACK, 10,0, Scale {x: 35.0,y: 35.0 }, &FONT_ART, &format!("{:04}",dt.year()));
     drawing::draw_text_mut(&mut img, BLACK, 85,0, Scale {x: 35.0,y: 35.0 }, &FONT_ART, &format!("{:2}月",dt.month()));
-    drawing::draw_text_mut(&mut img, BLACK, 30,140, Scale {x: 35.0,y: 35.0 }, &FONT_ART,
+    drawing::draw_text_mut(&mut img, BLACK, 35,140, Scale {x: 35.0,y: 35.0 }, &FONT_ART,
         &format!("星期{}",match dt.weekday().number_from_monday() {
             1 => "一",2 => "二",3 => "三",4 => "四",5 => "五",6 => "六",7 => "日",
             _ => ""
         }
     ));
+
+    //一言
+    drawing::draw_text_mut(&mut img, BLACK, 160,30, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[0..21]);
+    drawing::draw_text_mut(&mut img, BLACK, 160,90, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[24..45]);
+
+    //电量
+    let battery: f64 = (v as f64 - 3400f64)/700f64;
+    let battery = match battery {
+        _ if battery > 1f64 => battery,
+        _ if battery > 0f64 => battery,
+        _ => battery
+    };
+    drawing::draw_text_mut(&mut img, BLACK, 0,290, Scale {x: 12.0,y: 12.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100f64));
 
     generate_eink_bytes(&img)
 }
