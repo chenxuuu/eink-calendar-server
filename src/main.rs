@@ -55,15 +55,16 @@ async fn get_eink_data(
         second: 0,
     };
 
-    // let client = reqwest::Client::builder().build().unwrap();
-    // let resp = client.get(&format!(
-    //     "https://devapi.qweather.com/v7/weather/7d?location={},{}&key={}",
-    //     lng,
-    //     lat,
-    //     String::from_utf8_lossy(include_bytes!("weather.key"))
-    // )).send().await.unwrap().text().await.unwrap();
+    let client = reqwest::Client::builder().build().unwrap();
+    let resp = client.get(&format!(
+        "https://devapi.qweather.com/v7/weather/7d?location={},{}&key={}",
+        lng,
+        lat,
+        String::from_utf8_lossy(include_bytes!("weather.key"))
+    )).send().await.unwrap().text().await.unwrap();
 
-    let resp = String::from_utf8_lossy(include_bytes!("weather_json.json"));
+    //debug用，使用固定的天气信息
+    //let resp = String::from_utf8_lossy(include_bytes!("weather_json.json"));
 
     let weather_data: weather::WeatherData = serde_json::from_str(&resp).unwrap();
 

@@ -14,7 +14,7 @@ fn get_path() -> String{
 }
 //加载字体文件
 fn load_font(path: String) -> Font<'static>{
-    let mut file = File::open(path).unwrap();
+    let mut file = File::open(&path).expect(&path);
     let mut data = Vec::new();
     file.read_to_end(&mut data).unwrap();
     Font::try_from_vec(data).unwrap()
@@ -52,27 +52,34 @@ pub fn get_eink_image(w: &weather::WeatherData, imei: u64, v: u32) -> Vec<u8>{
     //当前时间（加点时间防止刷新完过了
     let dt = Local::now() + chrono::Duration::seconds(45);
 
-    //写字
-    drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 40.0,y: 40.0 }, &FONT_ART,&(dt.month().to_string()+"月"));
-    drawing::draw_text_mut(&mut img, BLACK, 0,40, Scale {x: 80.0,y: 80.0 }, &FONT_ART, &dt.day().to_string());
-
-
+    //显示天气
     if w.code == "200" {
         for n in 0..6 {
             let now = w.daily.get(n).unwrap();
             put_weather_img(&mut img,now.iconDay.to_string().parse::<u32>().unwrap(),66*n as u32,172);
             put_weather_img(&mut img,now.iconNight.to_string().parse::<u32>().unwrap(),66*n as u32,236);
             match n {
-                0 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"今天"),
-                1 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"明天"),
-                2 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"后天"),
+                0 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,228, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"今天"),
+                1 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,228, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"明天"),
+                2 => drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,228, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,"后天"),
                 _ => {
                     let dt_now = dt + chrono::Duration::days(n as i64);
-                    drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,226, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&(dt_now.day().to_string()+"日"))
+                    drawing::draw_text_mut(&mut img, BLACK, 16+66*n as u32,228, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&(dt_now.day().to_string()+"日"))
                 }
             }
         }
     }
+
+    //写上日期
+    drawing::draw_text_mut(&mut img, BLACK, 0,0, Scale {x: 170.0,y: 170.0 }, &FONT_ART, &format!("{:02}",dt.day()));
+    drawing::draw_text_mut(&mut img, BLACK, 10,0, Scale {x: 35.0,y: 35.0 }, &FONT_ART, &format!("{:04}",dt.year()));
+    drawing::draw_text_mut(&mut img, BLACK, 85,0, Scale {x: 35.0,y: 35.0 }, &FONT_ART, &format!("{:2}月",dt.month()));
+    drawing::draw_text_mut(&mut img, BLACK, 30,140, Scale {x: 35.0,y: 35.0 }, &FONT_ART,
+        &format!("星期{}",match dt.weekday().number_from_monday() {
+            1 => "一",2 => "二",3 => "三",4 => "四",5 => "五",6 => "六",7 => "日",
+            _ => ""
+        }
+    ));
 
     generate_eink_bytes(&img)
 }
