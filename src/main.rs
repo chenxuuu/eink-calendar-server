@@ -13,6 +13,7 @@ extern crate log;
 #[derive(Deserialize, Serialize)]
 struct Calendar {
     voltage: u32,
+    two_color: bool,
 }
 
 #[repr(C)]
@@ -78,7 +79,7 @@ async fn get_eink_data(
     reply.append(&mut bincode::serialize(&next).unwrap());
 
     //最终的图片
-    reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage));
+    reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage,!device.two_color));
 
     Ok(reply)
 }

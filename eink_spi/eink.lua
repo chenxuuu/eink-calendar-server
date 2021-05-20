@@ -269,24 +269,25 @@ lbsLoc.request(function (result,lat,lng)
     nil,
     {["Content-Type"]="application/json"},
     json.encode({
-        voltage = misc.getVbatt()
+        voltage = misc.getVbatt(),
+        two_color = true
     }),
     60000,
     function (result,_,_,body)
         log.info("http request", result,body:len())
         sys.taskInit(function ()
             local img1
-            local img2
+            --local img2
             if result then
                 local timeInfo = body:sub(1,14)
                 img1 = body:sub(15,15014)
-                img2 = body:sub(15015,30014)
+                --img2 = body:sub(15015,30014)
 
                 rtos.make_dir("/last/")
                 os.remove("/last/img1")
                 os.remove("/last/img2")
                 io.writeFile("/last/img1", img1, "wb")
-                io.writeFile("/last/img2", img2, "wb")
+                --io.writeFile("/last/img2", img2, "wb")
 
                 body = nil
                 collectgarbage("collect")
@@ -303,30 +304,30 @@ lbsLoc.request(function (result,lat,lng)
                 local onTimet = os.date("*t",os.time() + 3600*6)
                 rtos.set_alarm(1,onTimet.year,onTimet.month,onTimet.day,onTimet.hour,onTimet.min,onTimet.sec)
                 img1 = io.readFile("/last/img1")
-                img2 = io.readFile("/last/img2")
+                --img2 = io.readFile("/last/img2")
             end
 
             if not clear then--等刷新完
                 sys.waitUntil("EINK_CLEAR")
             end
-            if img1 and img2 then
-                EPD_init_4gray()
-                EPD_W21_WriteCMD(0x10)
-                dc(1)
-                spi.send(spi.SPI_1,img1)
-                EPD_W21_WriteCMD(0x13)
-                dc(1)
-                spi.send(spi.SPI_1,img2)
-                EPD_refresh_4gray()
-                EPD_sleep()
-                -- EPD_init()
-                -- EPD_W21_WriteCMD(0x10)--Transfer old data
-                -- EPD_W21_WriteDATA_S(white)
-                -- EPD_W21_WriteCMD(0x13)--Transfer new data
+            if img1 then
+                -- EPD_init_4gray()
+                -- EPD_W21_WriteCMD(0x10)
                 -- dc(1)
                 -- spi.send(spi.SPI_1,img1)
-                -- EPD_refresh()
+                -- EPD_W21_WriteCMD(0x13)
+                -- dc(1)
+                -- spi.send(spi.SPI_1,img2)
+                -- EPD_refresh_4gray()
                 -- EPD_sleep()
+                EPD_init()
+                EPD_W21_WriteCMD(0x10)--Transfer old data
+                EPD_W21_WriteDATA_S(white)
+                EPD_W21_WriteCMD(0x13)--Transfer new data
+                dc(1)
+                spi.send(spi.SPI_1,img1)
+                EPD_refresh()
+                EPD_sleep()
             end
 
             sys.wait(10000)

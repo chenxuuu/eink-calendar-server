@@ -42,7 +42,7 @@ const GRAY1:image::Luma<u8> = image::Luma([159]);
 const GRAY2:image::Luma<u8> = image::Luma([ 96]);
 const BLACK:image::Luma<u8> = image::Luma([ 0]);
 
-pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u64, v: u32) -> Vec<u8>{
+pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u64, v: u32, gray: bool) -> Vec<u8>{
     // 构建具有指定宽度和高度的RGB图像缓冲区。
     let mut img: GrayImage = ImageBuffer::new(WIDTH, HEIGHT);
 
@@ -94,11 +94,11 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
     };
     drawing::draw_text_mut(&mut img, BLACK, 0,290, Scale {x: 12.0,y: 12.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100.0));
 
-    generate_eink_bytes(&img)
+    generate_eink_bytes(&img,gray)
 }
 
 //生成最终的图片序列
-fn generate_eink_bytes(img: &GrayImage)->Vec<u8>{
+fn generate_eink_bytes(img: &GrayImage, gray: bool)->Vec<u8>{
     let mut r1:Vec<u8> = Vec::new();//第一张
     let mut r2:Vec<u8> = Vec::new();//第二张
     for y in 0..HEIGHT {
@@ -107,11 +107,19 @@ fn generate_eink_bytes(img: &GrayImage)->Vec<u8>{
             let mut temp2:u8 = 0;
             for i in 0..8 {
                 let p:u8 = img.get_pixel(l*8+i,y)[0];
-                let (t1,t2) = match p {//匹配像素点颜色
-                    192..=255 => (1,1),
-                    128..=191 => (1,0),
-                    64 ..=127 => (0,1),
-                    0  ..=63  => (0,0),
+                //匹配像素点颜色
+                let (t1,t2) = if gray {
+                    match p {
+                        192..=255 => (1,1),
+                        128..=191 => (1,0),
+                        64 ..=127 => (0,1),
+                        0  ..=63  => (0,0),
+                    }
+                }else{
+                    match p {
+                        128..=255 => (1,1),
+                        0 ..=127 => (0,0),
+                    }
                 };
                 temp1+=t1<<(7-i);
                 temp2+=t2<<(7-i);
@@ -120,7 +128,8 @@ fn generate_eink_bytes(img: &GrayImage)->Vec<u8>{
             r2.push(temp2);
         }
     }
-
-    r1.append(&mut r2);
+    if gray {
+        r1.append(&mut r2);
+    }
     r1
 }
