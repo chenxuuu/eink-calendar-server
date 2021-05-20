@@ -86,13 +86,13 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
     drawing::draw_text_mut(&mut img, BLACK, 160,90, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[24..45]);
 
     //电量
-    let battery: f64 = (v as f64 - 3400f64)/700f64;
+    let battery: f64 = (v as f64 - 3400.0)/700.0;
     let battery = match battery {
-        _ if battery > 1f64 => battery,
-        _ if battery > 0f64 => battery,
+        _ if battery > 1.0 => 1.0,
+        _ if battery < 0.0 => 0.0,
         _ => battery
     };
-    drawing::draw_text_mut(&mut img, BLACK, 0,290, Scale {x: 12.0,y: 12.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100f64));
+    drawing::draw_text_mut(&mut img, BLACK, 0,290, Scale {x: 12.0,y: 12.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100.0));
 
     generate_eink_bytes(&img)
 }
