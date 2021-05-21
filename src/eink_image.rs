@@ -75,7 +75,7 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
         }
         //当日天气信息
         let now = w.daily.get(offset).expect("get weather day error");
-        drawing::draw_text_mut(&mut img, BLACK, 10,130, Scale {x: 30.0,y: 30.0 }, &FONT_STATIC,&format!("{}～{}℃",now.tempMax,now.tempMin));
+        drawing::draw_text_mut(&mut img, BLACK, 5,120, Scale {x: 35.0,y: 35.0 }, &FONT_STATIC,&format!("{}~{}℃",now.tempMax,now.tempMin));
         drawing::draw_text_mut(&mut img, BLACK, 143,140, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&format!("相对湿度{}%",now.humidity));
         drawing::draw_text_mut(&mut img, BLACK, 10,160, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,
             &format!("白天{}{}级 夜间{}{}级",now.windDirDay,now.windScaleDay,now.windDirNight,now.windScaleNight));
@@ -93,8 +93,8 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
     ));
 
     //一言
-    drawing::draw_text_mut(&mut img, BLACK, 0,30, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[0..24]);
-    drawing::draw_text_mut(&mut img, BLACK, 0,90, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[24..48]);
+    drawing::draw_text_mut(&mut img, BLACK, 0,15, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[0..24]);
+    drawing::draw_text_mut(&mut img, BLACK, 0,70, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[24..48]);
 
     //电量
     let battery: f64 = (v as f64 - 3400.0)/700.0;
