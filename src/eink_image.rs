@@ -6,7 +6,6 @@ use chrono::prelude::*;
 use lazy_static::*;
 use std::fs::File;
 use std::io::Read;
-use std::convert::TryInto;
 
 //获取资源文件路径
 fn get_path() -> String{
@@ -75,7 +74,7 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
         }
         //当日天气信息
         let now = w.daily.get(offset).expect("get weather day error");
-        drawing::draw_text_mut(&mut img, BLACK, 5,120, Scale {x: 35.0,y: 35.0 }, &FONT_STATIC,&format!("{}~{}℃",now.tempMax,now.tempMin));
+        drawing::draw_text_mut(&mut img, BLACK, 5,120, Scale {x: 33.0,y: 33.0 }, &FONT_PIXEL,&format!("{}~{}℃",now.tempMax,now.tempMin));
         drawing::draw_text_mut(&mut img, BLACK, 143,140, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&format!("相对湿度{}%",now.humidity));
         drawing::draw_text_mut(&mut img, BLACK, 10,160, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,
             &format!("白天{}{}级 夜间{}{}级",now.windDirDay,now.windScaleDay,now.windDirNight,now.windScaleNight));
@@ -103,7 +102,8 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
         _ if battery < 0.0 => 0.0,
         _ => battery
     };
-    drawing::draw_text_mut(&mut img, BLACK, 0,290, Scale {x: 12.0,y: 12.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100.0));
+    drawing::draw_text_mut(&mut img, BLACK, 10,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &format!("{:.0}% {}mV",battery*100.0,v));
+    drawing::draw_text_mut(&mut img, BLACK, 305,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &dt.format("%Y-%m-%d %H:%M:%S").to_string());
 
     Ok(generate_eink_bytes(&img,gray))
 }

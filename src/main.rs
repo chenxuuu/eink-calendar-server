@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use warp::Filter;
 use tracing_subscriber::fmt::format::FmtSpan;
-use tracing::{debug,info,warn,error};
+use tracing::{debug,info};
 mod weather;
 mod eink_image;
 extern crate log;
@@ -36,7 +36,7 @@ async fn get_eink_data(
     info!("new request");
 
     //当前时间（加点时间防止刷新完过了
-    let dt = Local::now() + chrono::Duration::seconds(45);
+    let mut dt = Local::now() + chrono::Duration::seconds(45);
     let now = TimeStruct {
         year: dt.year() as u16,
         month: dt.month() as u8,
@@ -45,19 +45,22 @@ async fn get_eink_data(
         minute: dt.minute() as u8,
         second: dt.second() as u8,
     };
+
     //第二天零点
-    let dt = dt + chrono::Duration::days(1);
+    if dt.hour() >= 16 {
+        dt = dt + chrono::Duration::days(1);
+    }
     let next = TimeStruct {
         year: dt.year() as u16,
         month: dt.month() as u8,
         day: dt.day() as u8,
-        hour: 0,
+        hour: if dt.hour() >= 16 {0}else if dt.hour() >= 8 {16}else{8},
         minute: 0,
         second: 0,
     };
 
     let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(5)).build().expect("http client build error");
-    info!("get weather");
+    debug!("get weather");
     let resp = client.get(&format!(
         "https://devapi.qweather.com/v7/weather/7d?location={},{}&key={}",
         lng,
@@ -69,7 +72,7 @@ async fn get_eink_data(
     let weather_data: weather::WeatherData = serde_json::from_str(&resp).expect("json decode error");
 
     //一言
-    info!("get hitokoto");
+    debug!("get hitokoto");
     let resp = client.get("https://v1.hitokoto.cn/?c=i&min_length=16&max_length=16")
         .send().await.expect("http send error").text().await.expect("http recv error");
     let hitokoto: weather::Hitokoto = serde_json::from_str(&resp).expect("json decode error");
@@ -82,10 +85,10 @@ async fn get_eink_data(
     reply.append(&mut bincode::serialize(&next).expect("bincode encode error"));
 
     //最终的图片
-    info!("get img");
+    debug!("get img");
     reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage,!device.two_color)?);
 
-    info!("all done");
+    debug!("all done");
     Ok(reply)
 }
 
