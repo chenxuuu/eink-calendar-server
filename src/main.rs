@@ -32,7 +32,7 @@ async fn get_eink_data(
     lng: f64,
     lat: f64,
     device: Calendar,
-) -> Result<impl warp::Reply, Infallible> {
+) -> Result<Vec<u8>, &'static str> {
     info!("new request");
 
     //当前时间（加点时间防止刷新完过了
@@ -56,32 +56,46 @@ async fn get_eink_data(
         second: 0,
     };
 
-    let client = reqwest::Client::builder().build().unwrap();
+    let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(5)).build().expect("http client build error");
+    info!("get weather");
     let resp = client.get(&format!(
         "https://devapi.qweather.com/v7/weather/7d?location={},{}&key={}",
         lng,
         lat,
         String::from_utf8_lossy(include_bytes!("weather.key"))
-    )).send().await.unwrap().text().await.unwrap();
+    )).send().await.expect("http send error").text().await.expect("http recv error");
     //debug用，使用固定的天气信息
     //let resp = String::from_utf8_lossy(include_bytes!("weather_json.json"));
-    let weather_data: weather::WeatherData = serde_json::from_str(&resp).unwrap();
+    let weather_data: weather::WeatherData = serde_json::from_str(&resp).expect("json decode error");
 
     //一言
-    let resp = client.get("https://v1.hitokoto.cn/?c=i&min_length=16&max_length=16").send().await.unwrap().text().await.unwrap();
-    let hitokoto: weather::Hitokoto = serde_json::from_str(&resp).unwrap();
+    info!("get hitokoto");
+    let resp = client.get("https://v1.hitokoto.cn/?c=i&min_length=16&max_length=16")
+        .send().await.expect("http send error").text().await.expect("http recv error");
+    let hitokoto: weather::Hitokoto = serde_json::from_str(&resp).expect("json decode error");
 
     //用来存放最终返回的结果
     let mut reply: Vec<u8> = Vec::new();
     //当前时间
-    reply.append(&mut bincode::serialize(&now).unwrap());
+    reply.append(&mut bincode::serialize(&now).expect("bincode encode error"));
     //下次开机的时间
-    reply.append(&mut bincode::serialize(&next).unwrap());
+    reply.append(&mut bincode::serialize(&next).expect("bincode encode error"));
 
     //最终的图片
-    reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage,!device.two_color));
+    info!("get img");
+    reply.append(&mut eink_image::get_eink_image(&weather_data,&hitokoto,imei,device.voltage,!device.two_color)?);
 
+    info!("all done");
     Ok(reply)
+}
+
+async fn eink_server(
+    imei: u64,
+    lng: f64,
+    lat: f64,
+    device: Calendar,
+) -> Result<impl warp::Reply, Infallible> {
+    Ok(get_eink_data(imei,lng,lat,device).await.unwrap())
 }
 
 #[tokio::main]
@@ -102,7 +116,7 @@ async fn main() {
         .and(warp::path::param::<f64>())
         .and(warp::body::content_length_limit(1024 * 2))
         .and(warp::body::json())
-        .and_then(get_eink_data)
+        .and_then(eink_server)
         .with(warp::trace::named("log"));
 
     let hello = warp::get().and(warp::path("eink-calendar")).and(warp::path("hello"))
