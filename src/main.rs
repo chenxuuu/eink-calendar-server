@@ -73,7 +73,7 @@ async fn get_eink_data(
 
     //一言
     debug!("get hitokoto");
-    let resp = client.get("https://v1.hitokoto.cn/?c=i&min_length=16&max_length=16")
+    let resp = client.get("https://v1.hitokoto.cn/?c=i&max_length=16")
         .send().await.expect("http send error").text().await.expect("http recv error");
     let hitokoto: weather::Hitokoto = serde_json::from_str(&resp).expect("json decode error");
 
