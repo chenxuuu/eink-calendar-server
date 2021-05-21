@@ -73,6 +73,12 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
                 }
             }
         }
+        //当日天气信息
+        let now = w.daily.get(offset).expect("get weather day error");
+        drawing::draw_text_mut(&mut img, BLACK, 10,130, Scale {x: 30.0,y: 30.0 }, &FONT_STATIC,&format!("{}～{}℃",now.tempMax,now.tempMin));
+        drawing::draw_text_mut(&mut img, BLACK, 143,140, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,&format!("相对湿度{}%",now.humidity));
+        drawing::draw_text_mut(&mut img, BLACK, 10,160, Scale {x: 20.0,y: 20.0 }, &FONT_STATIC,
+            &format!("白天{}{}级 夜间{}{}级",now.windDirDay,now.windScaleDay,now.windDirNight,now.windScaleNight));
     }
 
     //写上日期
