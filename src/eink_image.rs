@@ -94,7 +94,7 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
     //一言
     {
         let split = h.hitokoto.len()/3;
-        let offset = (8-(split as u32)/2)*20;
+        let offset = (8-(split as u32)/2)*16;
         let split = split/2*3;
         drawing::draw_text_mut(&mut img, BLACK, offset,15, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[0..split]);
         drawing::draw_text_mut(&mut img, BLACK, offset,70, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[split..]);
@@ -102,15 +102,20 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
 
     //电量
     {
-        let battery: f64 = (v as f64 - 3400.0)/700.0;
+        let battery: f64 = v as f64 * 5.0 / 3000.0 - 6.0;
         let battery = match battery {
             _ if battery > 1.0 => 1.0,
             _ if battery < 0.0 => 0.0,
             _ => battery
         };
-        drawing::draw_text_mut(&mut img, BLACK, 10,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &format!("{:.0}% {}mV",battery*100.0,v));
-        drawing::draw_text_mut(&mut img, BLACK, 305,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &dt.format("%Y-%m-%d %H:%M:%S").to_string());
+        drawing::draw_text_mut(&mut img, BLACK, 26,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100.0));
+        drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(3, 290).of_size(22, 10),BLACK);
+        drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(1, 294).of_size(2, 4),BLACK);
+        drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(4, 291).of_size((20.0*(1.0-battery)) as u32, 8),WHITE);
     }
+
+    //更新时间
+    drawing::draw_text_mut(&mut img, BLACK, 260,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &dt.format("上次更新: %Y-%m-%d %H:%M:%S").to_string());
 
     Ok(generate_eink_bytes(&img,gray))
 }
