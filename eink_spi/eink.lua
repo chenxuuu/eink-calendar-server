@@ -322,7 +322,8 @@ lbsLoc.request(function (result,lat,lng)
                 -- EPD_sleep()
                 EPD_init()
                 EPD_W21_WriteCMD(0x10)--Transfer old data
-                EPD_W21_WriteDATA_S(white)
+                dc(1)
+                spi.send(spi.SPI_1,img1)
                 EPD_W21_WriteCMD(0x13)--Transfer new data
                 dc(1)
                 spi.send(spi.SPI_1,img1)
