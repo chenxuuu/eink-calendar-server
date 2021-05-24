@@ -110,7 +110,7 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
         };
         drawing::draw_text_mut(&mut img, BLACK, 26,291, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &format!("{:.0}%",battery*100.0));
         drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(3, 290).of_size(22, 10),BLACK);
-        drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(1, 294).of_size(2, 4),BLACK);
+        drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(1, 293).of_size(2, 4),BLACK);
         drawing::draw_filled_rect_mut(&mut img,imageproc::rect::Rect::at(4, 291).of_size((20.0*(1.0-battery)) as u32, 8),WHITE);
     }
 
