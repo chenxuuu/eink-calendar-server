@@ -16,7 +16,7 @@ require"misc"
 
 pmd.ldoset(15,pmd.LDO_VMMC)
 
-local result = spi.setup(spi.SPI_1,0,0,8,10000000,0)--初始化spi，
+local result = spi.setup(spi.SPI_1,0,0,8,1000000,0)--初始化spi，
 log.info("testSpi.init",result)
 
 local busy = pins.setup(3,nil,pio.PULLUP)
@@ -135,7 +135,7 @@ function PIC_display1()
     end
 end
 
-local white = string.rep(string.char(0xff),15000)
+local white = io.readFile("/lua/init.dat")--string.rep(string.char(0xff),15000)
 function EPD_display_Clean()
     EPD_W21_WriteCMD(0x10)--Transfer old data
     EPD_W21_WriteDATA_S(white)
