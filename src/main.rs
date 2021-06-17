@@ -73,13 +73,7 @@ async fn get_eink_data(
 
     //一言
     debug!("get hitokoto");
-    let hitokoto = if dt.hour() < 8 {
-        weather::Hitokoto{
-            hitokoto : String::from("早上好呀！诶嘿嘿。。"),
-            length : 30,
-        }
-    }
-    else {
+    let hitokoto = {
         let resp = client.get("https://v1.hitokoto.cn/?c=i&max_length=16")
         .send().await.expect("http send error").text().await.expect("http recv error");
         serde_json::from_str(&resp).expect("json decode error")
