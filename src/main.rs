@@ -76,7 +76,12 @@ async fn get_eink_data(
     let hitokoto = {
         let resp = client.get("https://v1.hitokoto.cn/?c=i&max_length=16")
         .send().await.expect("http send error").text().await.expect("http recv error");
-        serde_json::from_str(&resp).expect("json decode error")
+
+
+        serde_json::from_str(&resp).unwrap_or(weather::Hitokoto{
+            hitokoto: String::from("新的一天要加油哦"),
+            length: 8
+        })
     };
 
     //用来存放最终返回的结果
