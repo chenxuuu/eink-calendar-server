@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::Read;
 
 //获取资源文件路径
-fn get_path() -> String{
+pub fn get_path() -> String{
     std::env::args().nth(1).expect("static/")
 }
 //加载字体文件

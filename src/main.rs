@@ -2,8 +2,8 @@
 
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
-use warp::Filter;
+use std::{convert::Infallible, fs::File, io::Read};
+use warp::{Filter};
 use tracing_subscriber::fmt::format::FmtSpan;
 use tracing::{debug,info};
 mod weather;
@@ -74,14 +74,29 @@ async fn get_eink_data(
     //一言
     debug!("get hitokoto");
     let hitokoto = {
-        let resp = client.get("https://v1.hitokoto.cn/?c=i&max_length=16")
-        .send().await.expect("http send error").text().await.expect("http recv error");
+        let tt= if dt.hour() >= 16 {16}else if dt.hour() >= 8 {8}else{0};
+        let customFile = dt.format("%Y-%m-%d").to_string() + &tt.to_string() + ".txt";
+        let mut file = File::open(eink_image::get_path() + &customFile);
+        match &mut file {
+            Ok(f) => {
+                let mut s = String::new();
+                f.read_to_string(&mut s).expect("read string error");
+                let len = s.len() as u32;
+                serde_json::from_str(&resp).unwrap_or(weather::Hitokoto{
+                    hitokoto: s,
+                    length: len
+                })
+            },
+            Err(_) => {
+                let resp = client.get("https://v1.hitokoto.cn/?c=i&max_length=16")
+                .send().await.expect("http send error").text().await.expect("http recv error");
 
-
-        serde_json::from_str(&resp).unwrap_or(weather::Hitokoto{
-            hitokoto: String::from("新的一天要加油哦"),
-            length: 8
-        })
+                serde_json::from_str(&resp).unwrap_or(weather::Hitokoto{
+                    hitokoto: String::from("新的一天要加油哦"),
+                    length: 8
+                })
+            },
+        }
     };
 
     //用来存放最终返回的结果
