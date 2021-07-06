@@ -75,8 +75,8 @@ async fn get_eink_data(
     debug!("get hitokoto");
     let hitokoto = {
         let tt= if dt.hour() >= 16 {16}else if dt.hour() >= 8 {8}else{0};
-        let customFile = dt.format("%Y-%m-%d").to_string() + &tt.to_string() + ".txt";
-        let mut file = File::open(eink_image::get_path() + &customFile);
+        let custom_file = dt.format("%Y-%m-%d").to_string() + &tt.to_string() + ".txt";
+        let mut file = File::open(eink_image::get_path() + &custom_file);
         match &mut file {
             Ok(f) => {
                 let mut s = String::new();

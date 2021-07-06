@@ -1,4 +1,5 @@
 use image::{ImageBuffer, GrayImage,open};
+use imageproc::definitions::Clamp;
 use imageproc::drawing;
 use rusttype::{Font,Scale};
 use crate::weather;
@@ -93,11 +94,27 @@ pub fn get_eink_image(w: &weather::WeatherData, h: &weather::Hitokoto, _imei: u6
 
     //一言
     {
-        let split = h.hitokoto.len()/3;
-        let offset = (8-(split as u32)/2)*16;
-        let split = split/2*3;
-        drawing::draw_text_mut(&mut img, BLACK, offset,15, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[0..split]);
-        drawing::draw_text_mut(&mut img, BLACK, offset,70, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &h.hitokoto[split..]);
+        let temps = h.hitokoto.replace("\r", "").replace("\n", "");
+        let split = temps.len()/3;
+        if split <= 16 {
+            let offset = (8-(split as u32)/2)*16;
+            let split = split/2*3;
+            drawing::draw_text_mut(&mut img, BLACK, offset,15, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &temps[0..split]);
+            drawing::draw_text_mut(&mut img, BLACK, offset,70, Scale {x: 40.0,y: 40.0 }, &FONT_ART, &temps[split..]);
+        }else{
+            let mut line_now = 5;
+            let mut c_now = 0;
+            let mut c_last = 0;
+            while c_now < split{
+                c_last = c_now + 25;//每行25字
+                if c_last > split {
+                    c_last = split
+                }
+                drawing::draw_text_mut(&mut img, BLACK, 3,line_now, Scale {x: 11.0,y: 11.0 }, &FONT_PIXEL, &temps[(c_now*3)..(c_last*3)]);
+                line_now += 11;
+                c_now = c_last;
+            }
+        }
     }
 
     //电量
