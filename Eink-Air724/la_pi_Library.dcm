@@ -1,0 +1,38 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AHT21
+F https://item.szlcsc.com/515997.html
+$ENDCMP
+#
+$CMP Air724
+D Air724,4Gmodule
+F https://doc.openluat.com/wiki/6
+$ENDCMP
+#
+$CMP JW5033S
+D Step-Down Converter
+F https://www.joulwatt.com/proinfo_2405.html
+$ENDCMP
+#
+$CMP LIS2DS12
+D 3-Axis Accelerometer, 2/4/8/16g range, I2C/SPI interface
+K 3-axis accelerometer spi mems
+F https://www.st.com/resource/en/datasheet/lis2ds12.pdf
+$ENDCMP
+#
+$CMP QMC5883L
+D 3-axis Magnetic Sensor, I2C Interface, LGA-16
+K I2C magnetic 3-axis sensor
+$ENDCMP
+#
+$CMP SGM4054
+D constant-current/constantvoltage linear charger for single cell lithium-ion batteries.
+$ENDCMP
+#
+$CMP SW_Push
+D Push button switch, generic, two pins
+K switch normally-open pushbutton push-button
+F ~
+$ENDCMP
+#
+#End Doc Library
