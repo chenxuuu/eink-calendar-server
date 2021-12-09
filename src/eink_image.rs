@@ -28,7 +28,11 @@ lazy_static! {
 
 //摆放天气图片
 fn put_weather_img(img: &mut GrayImage,n: u32,x: u32, y: u32) {
-    let on_top = open(get_path()+"bw-64/"+&n.to_string()+".png").expect("open weather image error").into_luma8();
+    let file = match open(get_path()+"bw-64/"+&n.to_string()+".png") {
+        Ok(file) => file,
+        Err(_) => open(get_path()+"bw-64/999.png").unwrap(),
+    };
+    let on_top = file.into_luma8();
     image::imageops::overlay(img, &on_top, x, y);
 }
 
