@@ -30,7 +30,10 @@ lazy_static! {
 fn put_weather_img(img: &mut GrayImage,n: u32,x: u32, y: u32) {
     let file = match open(get_path()+"bw-64/"+&n.to_string()+".png") {
         Ok(file) => file,
-        Err(_) => open(get_path()+"bw-64/999.png").unwrap(),
+        Err(_) => {
+            println!("not found!{}",n);
+            open(get_path()+"bw-64/999.png").unwrap()
+        },
     };
     let on_top = file.into_luma8();
     image::imageops::overlay(img, &on_top, x, y);
